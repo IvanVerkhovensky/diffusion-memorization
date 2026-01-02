@@ -9,23 +9,23 @@ import os
 from src.data import generate_data
 from src.model import SimpleDenoiser
 
-# --- CONFIG (STABLE + NORMALIZED) ---
+# STABLE + NORMALIZED
 CONFIG = {
-    'D': 128,             # Высокая размерность
-    'K': 5,               # 1 Кластер (Тест на стабильность)
-    'N_TRAIN': 1000,      # Достаточно данных
-    'SIGMA_DATA': 2.0,    # Изначальный разброс
-    'BATCH_SIZE': 128,    # Большой батч = гладкий график
-    'LR': 2e-4,           # Аккуратный Learning Rate
-    'EPOCHS': 2000,       # Хватит для проверки
+    'D': 128,             # размерность
+    'K': 5,               # 1 Кластер (Тестируем на стабильность)
+    'N_TRAIN': 1000,      # Количество данных
+    'SIGMA_DATA': 2.0,    # разброс
+    'BATCH_SIZE': 128,    # Батч для гладкости графика
+    'LR': 2e-4,           # Learning Rate
+    'EPOCHS': 2000,       
     'CHECK_INTERVAL': 100,
     'DEVICE': 'mps' if torch.backends.mps.is_available() else 'cpu'
 }
 
 print(f"🚀 Running on {CONFIG['DEVICE']}")
 
-# --- 1. DATA GENERATION & NORMALIZATION ---
-# Генерируем "сырые" данные
+# 1. DATA GENERATION & NORMALIZATION 
+# Генерируем данные
 raw_data, raw_centroids = generate_data(
     CONFIG['N_TRAIN'], CONFIG['D'], CONFIG['K'], CONFIG['SIGMA_DATA'], CONFIG['DEVICE']
 )
@@ -34,7 +34,7 @@ raw_data, raw_centroids = generate_data(
 data_mean = raw_data.mean(dim=0)
 data_std = raw_data.std(dim=0)
 
-# НОРМАЛИЗАЦИЯ: (x - mu) / sigma
+# нормализация: (x - mu) / sigma
 train_data = (raw_data - data_mean) / (data_std + 1e-8)
 normalized_centroids = (raw_centroids - data_mean) / (data_std + 1e-8)
 
@@ -43,7 +43,7 @@ dataloader = DataLoader(dataset, batch_size=CONFIG['BATCH_SIZE'], shuffle=True)
 
 print(f"Data Normalized. Mean: {train_data.mean().item():.3f}, Std: {train_data.std().item():.3f}")
 
-# --- 2. MODEL & OPTIMIZER ---
+# 2. MODEL & OPTIMIZER
 model = SimpleDenoiser(input_dim=CONFIG['D'], device=CONFIG['DEVICE'])
 optimizer = optim.Adam(model.parameters(), lr=CONFIG['LR'])
 
@@ -90,13 +90,13 @@ def compute_metrics(generated, train_data, centroids):
     train_np = train_data.cpu().numpy()
     cent_np = centroids.cpu().numpy()
     
-    # Считаем метрики относительно НОРМАЛИЗОВАННЫХ данных
+    # Считаем метрики относительно нормализованных данных
     d2c = [np.min(np.linalg.norm(cent_np - p, axis=1)) for p in gen_np]
     d2t = [np.min(np.linalg.norm(train_np - p, axis=1)) for p in gen_np]
     
     return np.mean(d2c), np.mean(d2t)
 
-# --- 3. TRAIN LOOP ---
+# 3. TRAIN LOOP
 history = {'epoch': [], 'gen': [], 'mem': []}
 print("Starting training...")
 
@@ -124,10 +124,10 @@ try:
 except KeyboardInterrupt:
     print("Stopped manually")
 
-# --- IMPROVED PLOTTING (LOG SCALE) ---
+
 print("Generating Log-Scale Plot...")
 
-# Убираем первые несколько точек, где ошибка космос
+
 start_idx = 1 
 
 if len(history['epoch']) > start_idx:
@@ -155,7 +155,7 @@ plt.legend()
 plt.grid(True, which="both", ls="-", alpha=0.2)
 
 plt.tight_layout()
-# Сохраняем под новым именем, чтобы ты сразу увидел
+
 plt.savefig('results/final_result.png')
 print("✅ Graph saved to results/final_result.png! Check it now.")
 # plt.show()

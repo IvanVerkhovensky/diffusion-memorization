@@ -88,9 +88,9 @@ Summary table: `artifacts/summary_mac_compute_limited.csv`
 - `src/model.py` — MLP denoiser
 - `train.py` — training + sampling + metrics  
   - `--mode single` for a single run  
-  - `--mode scaling` for sweeps over dataset size `N` and seeds  
+  - `--mode scaling` for sweeps over dataset size $N$ and seeds  
 
-Outputs are written to `results/` by default (not intended for committing).
+Outputs are written to `results/` by default (not intended for committing). Final plots/summary for the README live in `figures/` and `artifacts/`.
 
 ---
 

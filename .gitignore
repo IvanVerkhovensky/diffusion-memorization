@@ -13,3 +13,18 @@ data/
 
 # IDE
 .vscode/
+
+# outputs
+results/
+
+# numpy / checkpoints
+*.npz
+*.pt
+*.pth
+
+# python
+__pycache__/
+*.pyc
+
+# mac
+.DS_Store

@@ -1,57 +1,66 @@
-# Why Diffusion Models Don't Memorize: PyTorch Implementation
+# Why Diffusion Models Don't Memorize (NeurIPS 2025) — Replication + PyTorch (Apple Silicon / MPS)
 
-[![Python](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-MPS%20Support-orange.svg)](https://pytorch.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
+Unofficial, research-oriented implementation inspired by the NeurIPS 2025 paper:
 
-> **Unofficial implementation** of experiments from the paper:  
-> **"Why Diffusion Models Don't Memorize: The Role of Implicit Dynamical Regularization in Training"**  
-> *NeurIPS 2025 Best Paper Award (Biroli et al.)*
+**“Why Diffusion Models Don't Memorize: The Role of Implicit Dynamical Regularization”**
 
-## 🎯 Project Goal
-This project reproduces the phase transition phenomenon in diffusion models. We demonstrate that during training, diffusion models first learn the **manifold structure (Generalization)** before overfitting to specific training examples (**Memorization**).
+This repo reproduces and analyzes diffusion training behavior on **synthetic high-dimensional Gaussian mixture data**, with a focus on clean separation between **generalization** and **memorization**, and a paper-aligned measurement protocol (time in **SGD steps** + memorization fraction).
 
-## 🔬 The Experiment
-We train a simplified Diffusion Model (DDPM-like) on a High-Dimensional Gaussian Mixture Model ($D=128$, $N=5000$).
+---
 
-**Metrics tracked:**
-1.  **Generalization Error:** Distance from generated samples to the true cluster centers.
-2.  **Memorization Error:** Distance from generated samples to the nearest training example.
+## Project goal
 
-### Key Observation
-According to the theory, there should be a **gap** between these two metrics.
-- If $E_{gen} < E_{mem}$, the model is generating *new* valid data (Generalization).
-- If $E_{gen} \approx E_{mem}$, the model has collapsed to the training set (Overfitting).
+Show that diffusion models can exhibit a **generalization-first regime** (learn the distribution structure) before entering a later-time **memorization regime** (generated samples become unusually close to training points), and provide a reproducible experimental pipeline to study this behavior under different dataset sizes.
 
-## 📊 Results
+---
 
-Below is the training dynamics on Apple Silicon (M4).
+## What’s implemented
 
-![Training Dynamics](results/final_result.png)
+### Phase 1 — Synthetic dynamics: Gen vs Mem gap
+We train a DDPM-like denoiser (MLP) on a high-dimensional GMM (default `D=128`) and track:
 
-### 📉 Analysis of Results
+- **Generalization error**: distance from generated samples to the nearest true cluster centroid.
+- **Memorization error**: distance from generated samples to the nearest training example.
 
-By observing the final epoch metrics (Log Scale plot), we can confirm the hypothesis:
+A persistent separation between these curves corresponds to a “generalization-first” regime.
 
-1.  **Generalization Error (Blue Line):** Converges to a lower value ($\approx 10^{1}$). This indicates the model successfully generates points near the true cluster center (the "Signal").
-2.  **Memorization Error (Orange Line):** Remains consistently higher ($\approx 1.5 \times 10^{1}$).
+### Phase 2 — Paper-style protocol: two timescales + memorization fraction
+To match the paper’s experimental logic more closely:
 
-**Conclusion:**
-This gap proves that the diffusion model **did not memorize** the training data.
-If the model had "memorized" (overfitted), the Orange line would have dropped to match or go below the Blue line (generating exact copies of training noise).
-Instead, the model ignored the noise and learned the underlying **manifold structure**, demonstrating **Implicit Dynamical Regularization**.
+- We measure training time as **SGD steps (optimizer updates)**, not epochs.
+- We log **memorization fraction** `f_mem(step)` using a 1-NN vs 2-NN ratio criterion.
 
-### 🚀 How to Run
+**Memorization fraction definition (kNN ratio):**
+For a generated sample `x`, let `d1^2` be the squared distance to its nearest training point, and `d2^2` to its second nearest.  
+Define `r = d1^2 / (d2^2 + eps)`.  
+A sample is considered “memorized” if `r < k` (default `k = 1/3`).  
+Then `f_mem` is the fraction of generated samples classified as memorized.
 
-1. **Clone the repository and run:**
-   ```bash
-   git clone https://github.com/IvanVerkhovensky/diffusion-memorization.git
-   cd diffusion-memorization
-   pip install -r requirements.txt
-   python train.py
-   ```
-   
+From these curves we extract:
+- `tau_gen`: step when generalization stabilizes (near-minimum gen error).
+- `tau_mem`: step when memorization fraction crosses a threshold and stays above it.
 
-   
+We also produce a “collapse plot” in the spirit of the paper:
+- `f_mem` vs `steps / N`.
 
-   
+---
+
+## Repository structure
+
+- `src/data.py` — synthetic GMM data generation
+- `src/model.py` — MLP denoiser
+- `train.py` — training + sampling + metrics
+  - `--mode single` for a single run
+  - `--mode scaling` for sweeps over dataset size `N` and seeds
+
+Outputs are written to `results/` by default.
+
+---
+
+## Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```

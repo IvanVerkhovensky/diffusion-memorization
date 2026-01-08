@@ -40,15 +40,11 @@ For a generated sample $x$, let:
 - $d_2^2$ be the squared distance to its second-nearest training point.
 
 Define the ratio:
-<img src="figures/eq_ratio.svg" width="420">
+<p align="center"><img src="figures/eq_ratio.svg" width="240"></p>
 
-A sample is considered “memorized” if:
+<p align="center"><img src="figures/eq_threshold.svg" width="260"></p>
 
-<img src="figures/eq_threshold.svg" width="320">
-
-The memorization fraction at training step $\tau$ is:
-
-<img src="figures/eq_fmem.svg" width="720">
+<p align="center"><img src="figures/eq_fmem.svg" width="350"></p>
 
 ---
 

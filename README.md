@@ -19,7 +19,7 @@ My goal is to make this behavior measurable, reproducible, and easy to run on a 
 
 ### Phase 1 — Synthetic dynamics: Generalization vs Memorization gap
 
-I train a DDPM-like denoiser (MLP) on a high-dimensional GMM (default `D=128`) and track:
+I train a DDPM-like denoiser (MLP) on a high-dimensional GMM (default $D=128$) and track:
 
 - **Generalization error**: distance from generated samples to the nearest true cluster centroid.
 - **Memorization error**: distance from generated samples to the nearest training example.
@@ -33,31 +33,35 @@ To match the paper’s experimental logic more closely:
 - I measure training time as **SGD steps** (optimizer updates), not epochs.
 - I log the **memorization fraction** $f_{\mathrm{mem}}(\tau)$ using a 1-NN vs 2-NN ratio criterion.
 
-**Memorization fraction definition (kNN ratio)**
+**Memorization fraction definition ($k$NN ratio)**
 
 For a generated sample $x$, let:
-- $d_1^2$ be the squared distance to its nearest training point,
+- $d_1^2$ be the squared distance to its nearest training point.
 - $d_2^2$ be the squared distance to its second-nearest training point.
 
 Define the ratio:
+
 $$
-r(x) = \frac{d_1^2}{d_2^2 + \varepsilon}.
+r(x) = \frac{d_1^2}{d_2^2 + \varepsilon}
 $$
 
 A sample is considered “memorized” if:
+
 $$
-r(x) < k, \quad \text{with } k=\frac{1}{3}.
+r(x) < k, \quad \text{with } k=\frac{1}{3}
 $$
 
 The memorization fraction at training step $\tau$ is:
+
 $$
-f_{\mathrm{mem}}(\tau) = \mathbb{E}\left[\mathbf{1}\{r(x_\tau)<k\}\right],
+f_{\mathrm{mem}}(\tau) = \mathbb{E}\left[\mathbf{1}\{r(x_\tau)<k\}\right]
 $$
+
 estimated empirically over generated samples.
 
 From the curves I extract:
-- $\tau_{\mathrm{gen}}$: step when generalization stabilizes (near-minimum generalization error)
-- $\tau_{\mathrm{mem}}$: step when $f_{\mathrm{mem}}(\tau)$ crosses a threshold and stays above it (within the compute budget)
+- $\tau_{\mathrm{gen}}$: step when generalization stabilizes (near-minimum generalization error).
+- $\tau_{\mathrm{mem}}$: step when $f_{\mathrm{mem}}(\tau)$ crosses a threshold and stays above it (within the compute budget).
 
 I also generate a paper-style “collapse plot”:
 - $f_{\mathrm{mem}}(\tau)$ vs $\tau/N$.
@@ -88,7 +92,7 @@ Summary table: `artifacts/summary_mac_compute_limited.csv`
 - `src/model.py` — MLP denoiser
 - `train.py` — training + sampling + metrics  
   - `--mode single` for a single run  
-  - `--mode scaling` for sweeps over dataset size `N` and seeds  
+  - `--mode scaling` for sweeps over dataset size $N$ and seeds  
 
 Outputs are written to `results/` by default (not intended for committing).
 

@@ -18,6 +18,7 @@ My goal is to make this behavior measurable, reproducible, and easy to run on a 
 ## What’s implemented
 
 ### Phase 1 — Synthetic dynamics: Generalization vs Memorization gap
+
 I train a DDPM-like denoiser (MLP) on a high-dimensional GMM (default `D=128`) and track:
 
 - **Generalization error**: distance from generated samples to the nearest true cluster centroid.
@@ -26,23 +27,40 @@ I train a DDPM-like denoiser (MLP) on a high-dimensional GMM (default `D=128`) a
 A persistent separation between these curves corresponds to a “generalization-first” regime.
 
 ### Phase 2 — Paper-style protocol: two timescales + memorization fraction
+
 To match the paper’s experimental logic more closely:
 
-- I measure training time as **SGD steps (optimizer updates)**, not epochs.
-- I log **memorization fraction** `f_mem(step)` using a 1-NN vs 2-NN ratio criterion.
+- I measure training time as **SGD steps** (optimizer updates), not epochs.
+- I log the **memorization fraction** $f_{\mathrm{mem}}(\tau)$ using a 1-NN vs 2-NN ratio criterion.
 
-**Memorization fraction definition (kNN ratio)**  
-For a generated sample `x`, let `d1^2` be the squared distance to its nearest training point and `d2^2` to its second nearest.  
-Define `r = d1^2 / (d2^2 + eps)`.  
-A sample is considered “memorized” if `r < k` (default `k = 1/3`).  
-Then `f_mem` is the fraction of generated samples classified as memorized.
+**Memorization fraction definition (kNN ratio)**
+
+For a generated sample $x$, let:
+- $d_1^2$ be the squared distance to its nearest training point,
+- $d_2^2$ be the squared distance to its second-nearest training point.
+
+Define the ratio:
+$$
+r(x) = \frac{d_1^2}{d_2^2 + \varepsilon}.
+$$
+
+A sample is considered “memorized” if:
+$$
+r(x) < k, \quad \text{with } k=\frac{1}{3}.
+$$
+
+The memorization fraction at training step $\tau$ is:
+$$
+f_{\mathrm{mem}}(\tau) = \mathbb{E}\left[\mathbf{1}\{r(x_\tau)<k\}\right],
+$$
+estimated empirically over generated samples.
 
 From the curves I extract:
-- `tau_gen`: step when generalization stabilizes (near-minimum gen error).
-- `tau_mem`: step when memorization fraction crosses a threshold and stays above it.
+- $\tau_{\mathrm{gen}}$: step when generalization stabilizes (near-minimum generalization error)
+- $\tau_{\mathrm{mem}}$: step when $f_{\mathrm{mem}}(\tau)$ crosses a threshold and stays above it (within the compute budget)
 
 I also generate a paper-style “collapse plot”:
-- `f_mem` vs `steps / N`.
+- $f_{\mathrm{mem}}(\tau)$ vs $\tau/N$.
 
 ---
 
@@ -51,16 +69,16 @@ I also generate a paper-style “collapse plot”:
 ### Single-run dynamics (Gen/Mem + memorization fraction)
 ![](figures/dynamics_single_mac.png)
 
-### Scaling of time scales (tau_gen / tau_mem)
+### Scaling of time scales ($\tau_{\mathrm{gen}}$ / $\tau_{\mathrm{mem}}$)
 ![](figures/scaling_tau_mac.png)
 
-### Collapse plot (f_mem vs steps/N)
+### Collapse plot ($f_{\mathrm{mem}}(\tau)$ vs $\tau/N$)
 ![](figures/collapse_fmem_mac.png)
 
 Summary table: `artifacts/summary_mac_compute_limited.csv`
 
-> Note: On Apple Silicon / MPS, reaching very late-time memorization for larger `N` may require more steps than practical locally.  
-> In those cases `tau_mem` can remain undefined within the current budget (`tau_mem > max_steps`), which should be interpreted as a right-censored estimate.
+> Note: On Apple Silicon / MPS, reaching very late-time memorization for larger $N$ may require more steps than practical locally.  
+> In those cases $\tau_{\mathrm{mem}}$ can remain undefined within the current budget (i.e., $\tau_{\mathrm{mem}} > \tau_{\max}$), which should be interpreted as a right-censored estimate.
 
 ---
 
@@ -75,6 +93,7 @@ Summary table: `artifacts/summary_mac_compute_limited.csv`
 Outputs are written to `results/` by default (not intended for committing).
 
 ---
+
 ## Setup
 
 ```bash

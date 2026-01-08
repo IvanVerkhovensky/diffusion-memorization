@@ -28,3 +28,5 @@ __pycache__/
 
 # mac
 .DS_Store
+
+results_old_*/

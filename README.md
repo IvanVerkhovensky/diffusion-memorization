@@ -75,10 +75,45 @@ Summary table: `artifacts/summary_mac_compute_limited.csv`
 Outputs are written to `results/` by default (not intended for committing).
 
 ---
-
 ## Setup
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+```
+---
+## How to run
+
+### Single run 
+
+Produces one run with:
+- Gen/Mem dynamics (log-scale)
+- `f_mem(step)` dynamics
+
+```bash
+python train.py --mode single \
+  --n_train 100 \
+  --train_seed 0 --data_seed 0 \
+  --max_steps 20000 \
+  --eval_every_steps 5000 \
+  --n_eval_samples 16 \
+  --train_chunk_size 1024 \
+  --device auto
+```
+---
+
+## Scaling sweep
+
+```bash
+python train.py --mode scaling \
+  --n_list 100 500 1000 \
+  --seeds 0 1 2 \
+  --max_steps 20000 \
+  --eval_every_steps 5000 \
+  --n_eval_samples 16 \
+  --train_chunk_size 1024 \
+  --device auto
+```
+
+

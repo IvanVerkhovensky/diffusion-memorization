@@ -33,7 +33,7 @@ To match the paper’s experimental logic more closely:
 - I measure training time as **SGD steps** (optimizer updates), not epochs.
 - I log the **memorization fraction** $f_{\mathrm{mem}}(\tau)$ using a 1-NN vs 2-NN ratio criterion.
 
-**Memorization fraction definition (kNN ratio)**
+#### Memorization fraction (kNN ratio)
 
 For a generated sample $x$, let:
 - $d_1^2$ be the squared distance to its nearest training point,
@@ -46,10 +46,10 @@ $$
 
 A sample is considered “memorized” if:
 $$
-r(x) < k, \quad \text{with } k=\frac{1}{3}.
+r(x) < k, \quad k=\frac{1}{3}.
 $$
 
-The memorization fraction at training step $\tau$ is:
+The memorization fraction at training step $\tau$ is then:
 $$
 f_{\mathrm{mem}}(\tau) = \mathbb{E}\left[\mathbf{1}\{r(x_\tau)<k\}\right],
 $$

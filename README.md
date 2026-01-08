@@ -40,7 +40,6 @@ For a generated sample $x$, let:
 - $d_2^2$ be the squared distance to its second-nearest training point.
 
 Define the ratio:
-
 <img src="figures/eq_ratio.svg" width="420">
 
 A sample is considered “memorized” if:

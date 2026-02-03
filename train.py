@@ -44,7 +44,7 @@ class ExpConfig:
     MEM_CONSECUTIVE: int = 2               # require f_mem >= thr for N evals in a row
     TRAIN_CHUNK_SIZE: int = 2048           # chunk for NN distances to avoid memory spikes
 
-    # reproducibility / infra
+    # reproducibility 
     DEVICE: str = "auto"
     OUT_DIR: str = "results"
     RUN_NAME: str = ""
@@ -130,10 +130,7 @@ def sample(model, n_samples, D, num_steps, betas, alphas, alphas_cumprod, device
 
 @torch.no_grad()
 def safe_cdist(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
-    """
-    Try torch.cdist on current device; if it fails (rare MPS edge cases),
-    fall back to CPU for distance computation.
-    """
+    
     try:
         return torch.cdist(a, b)
     except Exception:
@@ -172,16 +169,7 @@ def compute_memorization_fraction(
     train_chunk_size: int = 2048,
     eps: float = 1e-12,
 ):
-    """
-    Paper-like memorization fraction:
-      r = d1^2 / (d2^2 + eps), where d1^2 and d2^2 are 1st and 2nd nearest
-      squared distances to training points.
-      Memorized if r < k_ratio.
-
-    Returns:
-      f_mem: mean( r < k_ratio )
-      ratio_mean: mean(r)
-    """
+    
     n_gen = generated.shape[0]
     best1 = torch.full((n_gen,), float("inf"), device=generated.device)
     best2 = torch.full((n_gen,), float("inf"), device=generated.device)
@@ -216,9 +204,7 @@ def gap_log10(gen: float, mem: float, eps: float = 1e-12) -> float:
 # tau extraction 
 
 def extract_tau_gen(steps, gen, delta: float = 0.05):
-    """
-    tau_gen = first step where gen <= (1+delta)*min(gen).
-    """
+    
     if len(gen) == 0:
         return None
     gmin = float(np.min(gen))
@@ -230,9 +216,7 @@ def extract_tau_gen(steps, gen, delta: float = 0.05):
 
 
 def extract_tau_mem(steps, f_mem, thr: float = 0.05, consecutive: int = 2):
-    """
-    tau_mem = first step where f_mem >= thr for `consecutive` eval points in a row.
-    """
+    
     cnt = 0
     for s, fm in zip(steps, f_mem):
         if fm >= thr:
@@ -341,10 +325,7 @@ def plot_collapse_fmem(curves, out_path: Path, title: str):
 # data prep
 
 def prepare_data_once(cfg: ExpConfig, N: int, device: str):
-    """
-    Generate raw data + centroids and normalize using mean/std of this raw data.
-    Returns normalized tensors on device.
-    """
+    
     set_all_seeds(cfg.DATA_SEED)
     raw_data, raw_centroids = generate_data(N, cfg.D, cfg.K, cfg.SIGMA_DATA, device)
 
